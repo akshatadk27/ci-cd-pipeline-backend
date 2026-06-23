@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DEPLOY_PATH = '/home/ubuntu/ci-cd-pipeline/ci-cd-pipeline-backend'
-        BACKEND_PORT = '5000'  // Change to your app's port
+        BACKEND_PORT = '5000'
     }
 
     stages {
@@ -27,7 +27,7 @@ pipeline {
                     cp -r ./* ${DEPLOY_PATH}/ 2>/dev/null || true
                     
                     cd ${DEPLOY_PATH}
-                    echo "Files deployed to ${DEPLOY_PATH}"
+                    echo "Files deployed:"
                     ls -la
                 """
             }
@@ -56,7 +56,7 @@ pipeline {
                         pip install flask flask-cors
                     fi
                     
-                    echo "Dependencies installed successfully!"
+                    echo "✅ Dependencies installed successfully!"
                 """
             }
         }
@@ -67,16 +67,18 @@ pipeline {
                     echo "Stopping existing backend processes..."
                     
                     # Find and kill process running on port ${BACKEND_PORT}
-                    PID=\$(lsof -ti:${BACKEND_PORT} || echo "")
+                    PID=\$(lsof -ti:${BACKEND_PORT} 2>/dev/null || echo "")
                     if [ ! -z "\$PID" ]; then
                         echo "Killing process \$PID on port ${BACKEND_PORT}"
-                        kill -9 \$PID || echo "Process already stopped"
+                        kill -9 \$PID 2>/dev/null || echo "Process already stopped"
                     else
                         echo "No process found on port ${BACKEND_PORT}"
                     fi
                     
                     # Also kill any python app.py processes
-                    pkill -f 'python.*app.py' || echo "No app.py process found"
+                    pkill -f 'python.*app.py' 2>/dev/null || echo "No app.py process found"
+                    
+                    sleep 2
                 """
             }
         }
@@ -86,21 +88,25 @@ pipeline {
                 sh """
                     cd ${DEPLOY_PATH}
                     
-                    # Start the backend in background
                     echo "Starting backend application..."
                     source venv/bin/activate
+                    
+                    # Start the backend in background
                     nohup python3 app.py > app.log 2>&1 &
+                    BACKEND_PID=\$!
+                    
+                    echo "Backend started with PID: \$BACKEND_PID"
                     
                     # Wait a moment for the app to start
-                    sleep 3
+                    sleep 5
                     
                     # Check if app is running
-                    if ps aux | grep -v grep | grep "python.*app.py" > /dev/null; then
+                    if ps -p \$BACKEND_PID > /dev/null 2>&1; then
                         echo "✅ Backend started successfully!"
+                        echo "PID: \$BACKEND_PID"
                         echo "Logs: ${DEPLOY_PATH}/app.log"
-                        echo "Check logs: tail -f ${DEPLOY_PATH}/app.log"
                     else
-                        echo "❌ Failed to start backend. Check logs at ${DEPLOY_PATH}/app.log"
+                        echo "❌ Failed to start backend. Check logs:"
                         cat ${DEPLOY_PATH}/app.log
                         exit 1
                     fi
@@ -114,13 +120,12 @@ pipeline {
                     cd ${DEPLOY_PATH}
                     
                     if [ -f "backend_version.txt" ]; then
-                        echo "📋 Backend Version Info:"
+                        echo "📋 Backend Version:"
                         cat backend_version.txt
                     else
                         echo "No backend_version.txt found"
-                        # Create a version file
-                        echo "v1.0.0-$(date +'%Y%m%d-%H%M%S')" > backend_version.txt
-                        cat backend_version.txt
+                        echo "v1.0.0" > backend_version.txt
+                        echo "Created version file: v1.0.0"
                     fi
                 """
             }
@@ -130,13 +135,6 @@ pipeline {
     post {
         success {
             echo '🎉 Backend deployment completed successfully!'
-            echo "Application running on: http://localhost:${BACKEND_PORT}"
-            
-            // Display the version
-            sh """
-                cd ${DEPLOY_PATH}
-                echo "Current version: \$(cat backend_version.txt 2>/dev/null || echo 'Unknown')"
-            """
         }
         failure {
             echo '❌ Backend deployment failed!'
