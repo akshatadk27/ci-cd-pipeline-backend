@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_PATH = '/home/ubuntu/ci-cd-pipeline/ci-cd-pipeline-backend'
+        DEPLOY_PATH = '/var/jenkins_home/backend-app'
         BACKEND_PORT = '5000'
     }
 
