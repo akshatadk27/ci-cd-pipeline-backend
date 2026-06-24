@@ -16,13 +16,13 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("app")
 
 AWS_REGION = "us-east-1"
-S3_BUCKET = "ci-cd-workshop-frontend-rahul"
+S3_BUCKET = "ci-cd-project-ak"
 
 s3 = boto3.client("s3", region_name=AWS_REGION)
 dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 
-ASSIGNMENTS = dynamodb.Table("ci-cd-workshop-assignments")
-SUBMISSIONS = dynamodb.Table("ci-cd-workshop-submissions")
+ASSIGNMENTS = dynamodb.Table("ci-cd-assignments")
+SUBMISSIONS = dynamodb.Table("ci-cd-submissions")
 
 log.info("Backend initialized")
 
