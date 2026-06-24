@@ -4,7 +4,7 @@ pipeline {
     // Parameters: values set once, picked automatically on webhook trigger
     parameters {
         string(name: 'BACKEND_SERVER_IP', defaultValue: '44.202.10.36', description: 'Public IP of backend EC2 server')
-        string(name: 'DEPLOY_DIR', defaultValue: '/home/ubuntu/backend-app', description: 'Directory on backend server to deploy app')
+        string(name: 'DEPLOY_DIR', defaultValue: '/home/ubuntu/ci-cd-pipeline/ci-cd-pipeline-backend', description: 'Directory on backend server to deploy app')
     }
 
     environment {
