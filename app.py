@@ -131,15 +131,24 @@ def delete_submission(id):
 
     return {"message": "Submission deleted"}
 
+import os
+
 @app.route("/backend_version", methods=["GET"])
 def backend_version():
-    try:
-        with open("backend_version.txt") as f:
-            version = f.read().strip()
-    except FileNotFoundError:
-        version = "unknown"
-    return jsonify({"backend_version": version})
+        try:
+                    version_file = os.path.join(
+                                        os.path.dirname(os.path.abspath(__file__)),
+                                                    "backend_version.txt"
+                                                            )
+
+                            with open(version_file, "r") as f:
+                                            version = f.read().strip()
+
+                                                except Exception as e:
+                                                            version = "unknown"
+
+                                                                return jsonify({"backend_version": version})
 
 
-# -----------------------------------------
-app.run(host="0.0.0.0", port=5000, debug=True)
+if __name__ == "__main__":
+        app.run(host="0.0.0.0", port=5000)
