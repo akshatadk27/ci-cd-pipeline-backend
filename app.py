@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("app")
 
 AWS_REGION = "us-east-1"
-S3_BUCKET = "ci-cd-project-ak"
+S3_BUCKET = "ci-cd-pipeline-ak"
 
 s3 = boto3.client("s3", region_name=AWS_REGION)
 dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
@@ -131,24 +131,15 @@ def delete_submission(id):
 
     return {"message": "Submission deleted"}
 
-import os
-
 @app.route("/backend_version", methods=["GET"])
 def backend_version():
-        try:
-                    version_file = os.path.join(
-                                        os.path.dirname(os.path.abspath(__file__)),
-                                                    "backend_version.txt"
-                                                            )
-
-                            with open(version_file, "r") as f:
-                                            version = f.read().strip()
-
-                                                except Exception as e:
-                                                            version = "unknown"
-
-                                                                return jsonify({"backend_version": version})
+    try:
+        with open("backend_version.txt") as f:
+            version = f.read().strip()
+    except FileNotFoundError:
+        version = "unknown"
+    return jsonify({"backend_version": version})
 
 
-if __name__ == "__main__":
-        app.run(host="0.0.0.0", port=5000)
+# -----------------------------------------
+app.run(host="0.0.0.0", port=5000, debug=True)
